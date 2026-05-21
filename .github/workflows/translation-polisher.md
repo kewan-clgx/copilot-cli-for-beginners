@@ -74,14 +74,17 @@ If this workflow is triggered by `pull_request`, inspect the triggering pull req
 
 Before editing, inspect the pull request's latest commit, current diff, labels, and body.
 
-Stop with a no-op only if both of these are true:
+Stop with a no-op only if all of these are true:
 
 1. The translated Markdown already satisfies the quality checklist below and no file changes are needed.
-2. The pull request body already contains an up-to-date `## Translation Quality Review` section with one grade row for every changed translated Markdown file.
+2. The pull request body already contains an up-to-date managed `## Translation Quality Review` section with one grade row for every changed translated Markdown file.
+3. Every existing grade in the managed review section is **A- or higher**.
 
 If the latest commit appears to be from this Translation Polisher workflow but the pull request body is missing the `## Translation Quality Review` section, do not edit files. Still review and grade the changed translated Markdown files, update the pull request body, and add a concise comment if useful.
 
-Do not add churn. If the translation is already good enough and the PR body already has current grades, leave it unchanged.
+If the pull request body already contains a managed `## Translation Quality Review` section and any row is graded **B+ or lower**, treat those files as required repair targets. Review and polish those files again before deciding whether to push changes or leave a blocking comment.
+
+Do not add churn. If the translation is already good enough and the PR body already has current A- or higher grades, leave it unchanged.
 
 ## Files you may change
 
@@ -104,22 +107,27 @@ Do not edit:
    - Example: compare `translations/es/README.md` with `README.md`.
    - Example: compare `translations/es/03-development-workflows/README.md` with `03-development-workflows/README.md`.
 3. Focus on files changed by the pull request, not every translated file in the repository.
-4. Preserve Markdown structure exactly unless a link or heading fix is required.
-5. Apply the shared quality rules and the language quality profile for each target language present in the pull request.
-6. Run the deterministic cleanup script after edits:
+4. If the pull request body already has a managed `## Translation Quality Review` section, identify files with grades below A- and repair those files first.
+5. Preserve Markdown structure exactly unless a link or heading fix is required.
+6. Apply the shared quality rules and the language quality profile for each target language present in the pull request.
+7. Run an untranslated learner-facing text pass:
+   - Check headings, visible table headers, navigation tables, list labels, callout/admonition labels, and human-facing link labels.
+   - Translate leftover English when it is learner-facing prose.
+   - Preserve product names, commands, file paths, branch names, package names, URLs, badge URLs, code identifiers, and GitHub UI labels that learners must recognize.
+8. Run the deterministic cleanup script after edits:
 
    ```bash
    node .github/scripts/fix-translated-markdown.js "<language-codes>"
    ```
 
-7. Perform a final review of each changed target-language file against its English source file. Grade each file using A, A-, B+, B, B-, C, D, or F.
-8. Continue improving the translation until every changed target-language file earns **A- or higher**.
-9. If any changed target-language file remains below A- after reasonable polishing, do not push changes and do not add the `translation-polished` label. Add a pull request comment explaining the blocking issues and the current file grades.
-10. Review your final diff. If it contains anything outside `translations/**/*.md`, revert those changes.
-11. Push your changes to the target pull request branch using the safe output only when every changed target-language file is A- or higher.
-12. Update the pull request body with a final per-file grade table using the instructions in **Pull request body update**.
-13. Add the `translation-polished` label only when every changed target-language file is A- or higher.
-14. Add a short pull request comment summarizing what was polished, which languages were touched, and the final grade range.
+9. Perform a final review of each changed target-language file against its English source file. Grade each file using A, A-, B+, B, B-, C, D, or F.
+10. Continue improving the translation until every changed target-language file earns **A- or higher**.
+11. If any changed target-language file remains below A- after reasonable polishing, do not push changes and do not add the `translation-polished` label. Update the pull request body with `Translation status: Needs polish` and add a pull request comment explaining the blocking issues and current file grades.
+12. Review your final diff. If it contains anything outside `translations/**/*.md`, revert those changes.
+13. Push your changes to the target pull request branch using the safe output only when every changed target-language file is A- or higher.
+14. Update the pull request body with a final per-file grade table using the instructions in **Pull request body update**.
+15. Add the `translation-polished` label only when every changed target-language file is A- or higher.
+16. Add a short pull request comment summarizing what was polished, which languages were touched, and the final grade range.
 
 ## Quality checklist
 
@@ -130,7 +138,7 @@ For every translated Markdown file you edit:
 - Preserve Markdown tables, lists, blockquotes, headings, and admonitions.
 - Preserve links and image destinations. Translate only the human-facing link label when appropriate.
 - Translate human-facing prose naturally for the target language.
-- Translate visible table headings and list labels when they are human-facing content.
+- Translate visible headings, table headings, navigation labels, list labels, callout labels, and link labels when they are human-facing content.
 - Keep the beginner-friendly tone of the English source.
 - Avoid literal phrasing that sounds unnatural in the target language.
 - Do not remove the Co-op Translator disclaimer.
@@ -199,29 +207,41 @@ Apply the profile only when that language is present in the pull request.
 
 ## Pull request body update
 
-After the final review, update the pull request body with a managed translation-quality section.
+After the final review, update the pull request body with a managed translation-quality section. Replace only the managed block between these markers:
 
-The body must include exactly one section with this heading:
+```markdown
+<!-- translation-quality-review:start -->
+<!-- translation-quality-review:end -->
+```
+
+The body must include exactly one managed block and exactly one section inside that block with this heading:
 
 ```markdown
 ## Translation Quality Review
 ```
 
-If the section already exists, replace the entire existing section with the new one. Do not append duplicates.
+If an older unmarked `## Translation Quality Review` section already exists, replace it with the marked block. Do not append duplicates. Do not place generated workflow footers, integrity notes, or unrelated comments inside the managed block.
 
 Use this format:
 
 ```markdown
+<!-- translation-quality-review:start -->
 ## Translation Quality Review
+
+**Translation status:** Accepted
+**Files reviewed:** 34 total, 34 accepted, 0 needs polish
 
 | Language | File | Final grade | Notes |
 |---|---|---:|---|
 | es | `translations/es/README.md` | A- | Preserves structure and reads naturally after polish. |
 
 All changed translated Markdown files must be graded **A- or higher** before this PR is marked `translation-polished`.
+<!-- translation-quality-review:end -->
 ```
 
-Include one row for every changed translated Markdown file in the target pull request. Keep notes concise and specific.
+Use `Translation status: Accepted` only when every changed translated Markdown file is graded A- or higher. Otherwise use `Translation status: Needs polish`, include counts for total files, accepted files, and files that need polish, and keep the `translation-polished` label off the PR.
+
+Include one row for every changed translated Markdown file in the target pull request. Keep notes concise and specific. For below-threshold files, the note must state the highest-impact issue to fix.
 
 ## Pull request comment
 
