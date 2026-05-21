@@ -97,16 +97,20 @@ Do not edit:
    - Example: compare `translations/es/03-development-workflows/README.md` with `03-development-workflows/README.md`.
 3. Focus on files changed by the pull request, not every translated file in the repository.
 4. Preserve Markdown structure exactly unless a link or heading fix is required.
-5. Run the deterministic cleanup script after edits:
+5. Apply the shared quality rules and the language quality profile for each target language present in the pull request.
+6. Run the deterministic cleanup script after edits:
 
    ```bash
    node .github/scripts/fix-translated-markdown.js "<language-codes>"
    ```
 
-6. Review your final diff. If it contains anything outside `translations/**/*.md`, revert those changes.
-7. Push your changes to the target pull request branch using the safe output.
-8. Add the `translation-polished` label.
-9. Add a short pull request comment summarizing what was polished and which languages were touched.
+7. Perform a final review of each changed target-language file against its English source file. Grade each language using A, A-, B+, B, B-, C, D, or F.
+8. Continue improving the translation until every target language you touched earns **A- or higher**.
+9. If any target language remains below A- after reasonable polishing, do not push changes and do not add the `translation-polished` label. Add a pull request comment explaining the blocking issues and the current grade.
+10. Review your final diff. If it contains anything outside `translations/**/*.md`, revert those changes.
+11. Push your changes to the target pull request branch using the safe output only when every touched language is A- or higher.
+12. Add the `translation-polished` label only when every touched language is A- or higher.
+13. Add a short pull request comment summarizing what was polished, which languages were touched, and the final grade for each touched language.
 
 ## Quality checklist
 
@@ -123,39 +127,66 @@ For every translated Markdown file you edit:
 - Do not remove the Co-op Translator disclaimer.
 - Do not edit translation metadata.
 
-## Language style guidance
+## Final translation review rubric
+
+Before pushing, review each touched language against the corresponding English source and assign a grade.
+
+Grade **A- or higher** only when all of these are true:
+
+- The translation preserves the meaning, scope, warnings, and calls to action from the English source.
+- The Markdown structure, links, images, headings, tables, badges, and code blocks are intact.
+- Human-facing prose, navigation labels, table headings, and link labels are translated where appropriate.
+- Product names, commands, file paths, URLs, package names, and UI labels are preserved when they should be.
+- The text sounds natural to a technical learner in the target language, not like a literal sentence-by-sentence translation.
+- Terminology is consistent within the file and across the same target language.
+- The tone remains beginner-friendly, practical, and encouraging.
+
+Use **B+ or lower** if any visible learner-facing text remains unnecessarily in English, if phrasing is noticeably awkward, if terminology is inconsistent, or if important nuance is missing. Keep polishing until the grade is A- or higher.
+
+## Language quality profiles
+
+Apply the profile only when that language is present in the pull request.
+
+### Shared rules for all languages
+
+- Preserve product names such as **GitHub Copilot CLI**, **GitHub Codespaces**, and **Azure AI Foundry** unless an official localized name is clearly standard in the target-language ecosystem.
+- Preserve commands, code, file paths, URLs, badge URLs, package names, branch names, and repository names.
+- Translate human-facing link labels, table headings, navigation labels, and instructional prose.
+- Keep English technical terms only when they are common in the target language, are official UI labels, or are product/feature names.
+- Prefer natural beginner-friendly phrasing over literal translation.
+- Use consistent terminology within each file and across the same language.
+- Do not over-localize acronyms or terms that target-language developers normally use in English.
 
 ### Spanish (`es`)
 
-Use clear, neutral Spanish that works for a broad technical audience.
+- Use clear, neutral Spanish for a broad technical audience.
+- Prefer natural active voice over passive constructions.
+- Localize beginner-facing concepts such as issue and pull request when clarity improves, but keep GitHub UI terms in English when they refer to the UI label.
+- Keep common technical acronyms such as API.
+- Avoid overly literal phrasing. For example, prefer natural wording such as `potenciar`, `colega experto`, and `donde se encuentra cada una` when the sentence context calls for it.
 
-Prefer:
+### Korean (`ko`)
 
-- `potenciar` over `supercargar`
-- `colega experto` over `colega conocedor`
-- `dónde se encuentra cada una` over `donde vive cada una`
-- `solicitudes de incorporación de cambios` or `pull requests` consistently, instead of mixing `PRs` and `pull requests`
-- `incidencias` or `issues` consistently, depending on context
-- `habilidades` for generic skills, but keep `Skills` when referring to the GitHub Copilot feature name if that matches the course terminology
+- Use polite, clear technical Korean appropriate for educational documentation.
+- Keep product names in English unless there is a clear official Korean name.
+- Prefer commonly used Korean developer terminology for concepts, but do not translate CLI commands, file paths, Git branch names, package names, or GitHub UI labels that learners must recognize.
+- Avoid overly formal or machine-translated sentence endings; keep instructions direct and approachable.
 
-Translate common link labels:
+### Japanese (`ja`)
 
-- `Create one free` -> `Crea una gratis`
-- `Free offering` -> `Oferta gratuita`
-- `Monthly subscription` -> `Suscripción mensual`
-- `Free for students/teachers` -> `Gratis para estudiantes/profesores`
-- `Quick Start` -> `Inicio rápido`
-- `First Steps` -> `Primeros pasos`
-- `Context and Conversations` -> `Contexto y conversaciones`
-- `Development Workflows` -> `Flujos de trabajo de desarrollo`
-- `Create Specialized AI Assistants` -> `Crear asistentes de IA especializados`
-- `Automate Repetitive Tasks` -> `Automatizar tareas repetitivas`
-- `Connect to GitHub, Databases & APIs` -> `Conectar con GitHub, bases de datos y APIs`
-- `Putting It All Together` -> `Poniéndolo todo junto`
+- Use clear technical Japanese with a polite instructional tone.
+- Keep product names in English unless there is a clear official Japanese name.
+- Prefer standard Japanese developer terms and natural sentence structure.
+- Avoid overly literal English word order.
+- Do not translate commands, file paths, Git branch names, package names, or GitHub UI labels that learners must recognize.
 
-### Korean (`ko`), Japanese (`ja`), and Simplified Chinese (`zh-CN`)
+### Simplified Chinese (`zh-CN`)
 
-If these languages are present in the PR, polish for natural technical learning content in that language. Keep product names such as **GitHub Copilot CLI**, **GitHub Codespaces**, and **Azure AI Foundry** unchanged unless the official localized name is clearly used in the source ecosystem.
+- Use Simplified Chinese.
+- Use clear mainland Chinese technical documentation style.
+- Keep product names in English unless there is a clear official Simplified Chinese name.
+- Avoid Taiwan/Hong Kong traditional terminology.
+- Do not translate commands, file paths, Git branch names, package names, or GitHub UI labels that learners must recognize.
 
 ## Pull request comment
 
@@ -163,6 +194,7 @@ After polishing, add a concise comment with:
 
 1. The pull request number reviewed.
 2. The languages touched.
-3. A short summary of improvements, such as link-label translation, terminology consistency, and readability polish.
+3. The final grade for each touched language. Only report `A-` or higher as accepted.
+4. A short summary of improvements, such as link-label translation, terminology consistency, and readability polish.
 
 If no changes are needed, use a no-op and do not comment.
