@@ -1,6 +1,6 @@
 import json
 from dataclasses import dataclass, asdict
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 DATA_FILE = "data.json"
 
@@ -70,3 +70,30 @@ class BookCollection:
     def find_by_author(self, author: str) -> List[Book]:
         """Find all books by a given author."""
         return [b for b in self.books if b.author.lower() == author.lower()]
+
+    def search_books(self, query: str) -> List[Book]:
+        """Search books by partial match on title or author (case-insensitive)."""
+        term = query.lower()
+        return [
+            b for b in self.books
+            if term in b.title.lower() or term in b.author.lower()
+        ]
+
+    def get_statistics(self) -> Dict[str, object]:
+        """Return statistics about the book collection."""
+        total = len(self.books)
+        num_read = sum(1 for b in self.books if b.read)
+        num_unread = total - num_read
+        newest = max(self.books, key=lambda b: b.year) if self.books else None
+        oldest = min(self.books, key=lambda b: b.year) if self.books else None
+        authors = set(b.author for b in self.books)
+
+        return {
+            "total_books": total,
+            "books_read": num_read,
+            "books_unread": num_unread,
+            "percent_read": round((num_read / total) * 100, 1) if total > 0 else 0.0,
+            "newest_book": newest,
+            "oldest_book": oldest,
+            "unique_authors": len(authors),
+        }

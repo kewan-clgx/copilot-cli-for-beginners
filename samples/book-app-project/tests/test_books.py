@@ -51,3 +51,36 @@ def test_remove_book_invalid():
     collection = BookCollection()
     result = collection.remove_book("Nonexistent Book")
     assert result is False
+
+
+def test_search_books_by_title_partial():
+    collection = BookCollection()
+    collection.add_book("The Hobbit", "J.R.R. Tolkien", 1937)
+    collection.add_book("1984", "George Orwell", 1949)
+    results = collection.search_books("hobbit")
+    assert len(results) == 1
+    assert results[0].title == "The Hobbit"
+
+
+def test_search_books_by_author_partial():
+    collection = BookCollection()
+    collection.add_book("The Hobbit", "J.R.R. Tolkien", 1937)
+    collection.add_book("1984", "George Orwell", 1949)
+    results = collection.search_books("orwell")
+    assert len(results) == 1
+    assert results[0].title == "1984"
+
+
+def test_search_books_case_insensitive():
+    collection = BookCollection()
+    collection.add_book("Dune", "Frank Herbert", 1965)
+    results = collection.search_books("DUNE")
+    assert len(results) == 1
+    assert results[0].title == "Dune"
+
+
+def test_search_books_no_results():
+    collection = BookCollection()
+    collection.add_book("Dune", "Frank Herbert", 1965)
+    results = collection.search_books("xyz123")
+    assert len(results) == 0
